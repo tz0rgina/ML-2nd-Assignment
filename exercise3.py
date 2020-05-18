@@ -39,34 +39,14 @@ Y_test = np_utils.to_categorical(Y_test, 10)
 p = Augmentor.Pipeline()
 p.rotate(probability=0.3, max_left_rotation=3, max_right_rotation=3)
 p.zoom(probability=0.2, min_factor=0.6, max_factor=1.2)
-p.random_distortion(probability=0.5, grid_width=4, grid_height=4, magnitude=4)
+p.random_distortion(probability=0.3, grid_width=4, grid_height=4, magnitude=2)
 p.shear(0.3, 0.2, 0.2)
 p.status()
 
-for i in range(2):
-    g = p.keras_generator_from_array(X_train, Y_train, 9)
-    images, labels = next(g)
-    for i in range(0, 9):
-        plt.subplot(330 + 1 + i)
-        plt.imshow(images[i].reshape(28, 28), cmap=plt.get_cmap('gray'))
-        plt.title(np.argmax(labels[i]))
-    #show the plot
-    plt.show()
-    
 val_p = Augmentor.Pipeline()
 val_p.status()
 
-datagen = ImageDataGenerator(
-    featurewise_center=True,
-    featurewise_std_normalization=True,
-    zca_whitening=True,
-    brightness_range = (0.5, 4.0),
-    zca_epsilon=1e-1,
-    )
-    
-#datagen.fit(X_train)
 
-"""
 # Define model architecture
 
 model = Sequential()
@@ -80,54 +60,35 @@ model.add(Flatten())
 model.add(Dense(100, activation='relu'))
 #model.add(Dropout(0.4))
 model.add(Dense(10, activation='softmax'))
-"""
-
-# Define model architecture i phone app
-
-model = Sequential()
-model.add(Convolution2D(32, (3, 3), padding='same', activation='relu', input_shape=(28,28,1)))
-model.add(MaxPooling2D(pool_size=2))
-#model.add(Dropout(0.4))
-model.add(Convolution2D(32, kernel_size=2, padding='same', activation='relu'))
-model.add(MaxPooling2D(pool_size=(2,2)))
-model.add(Convolution2D(32, kernel_size=2, padding='same', activation='relu'))
-model.add(MaxPooling2D(pool_size=(2,2)))
-model.add(Dropout(0.3))
-model.add(Flatten())
-model.add(Dense(500, activation='relu'))
-model.add(Dropout(0.4))
-model.add(Dense(10, activation='softmax'))
 
 
 # Compile model
 model.compile(loss='categorical_crossentropy',
-              optimizer=keras.optimizers.Adadelta(),
+              optimizer='adam',
               metrics=['accuracy'])
 
 model.summary()
-"""
+ 
 batch_size=64
 epochs=300 
 early_stop=keras.callbacks.EarlyStopping(monitor='val_accuracy',
-                              verbose=1, patience=5, mode='max') #stop training when val_loss begins increase
+                              verbose=1, patience=10, mode='max') #stop training when val_loss begins increase
 
-X_batch, y_batch = next(datagen.flow(X_train,Y_train, batch_size=len(X_train)))
-print(X_batch.shape)
-history3_12 = model.fit_generator(p.keras_generator_from_array(X_batch, y_batch, batch_size=batch_size),
+
+history3 = model.fit_generator(p.keras_generator_from_array(X_train,Y_train, batch_size=batch_size),
         epochs = epochs, steps_per_epoch = X_train.shape[0]//batch_size, 
         validation_data=val_p.keras_generator_from_array(X_test,Y_test, batch_size=batch_size), validation_steps=(X_test.shape[0])//batch_size,callbacks=[early_stop], verbose=1)
+ """
 
 history3drop = model.fit_generator(p.keras_generator_from_array(X_train,Y_train, batch_size=batch_size),
         epochs = epochs, steps_per_epoch = X_train.shape[0]//batch_size, 
         validation_data=val_p.keras_generator_from_array(X_test,Y_test, batch_size=batch_size), validation_steps=(X_test.shape[0])//batch_size,callbacks=[early_stop], verbose=1) #*used for history3_4*
 """
-
-history3app=model.fit(X_train, Y_train, batch_size=512, epochs=6, verbose=1, validation_data=(X_test, Y_test))
 # Evaluate model on test data
 score = model.evaluate(X_test, Y_test, verbose=0)
 print ("score")
-model.save('model_3app.h5') #saving the model
+model.save('model_3.h5') #saving the model
 import pickle
 
-with open('trainHistory3app', 'wb') as handle: # saving the history of the model
-   pickle.dump(history3app.history, handle)
+with open('trainHistory3', 'wb') as handle: # saving the history of the model
+   pickle.dump(history3_8.history, handle)
